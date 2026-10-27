@@ -9,7 +9,7 @@ HarmonyVoicesEditor::HarmonyVoicesEditor (HarmonyVoicesProcessor& p)
     setSize (900, 620);
 
     titleLabel.setText ("LIBERTY   |   HARMONYVOICES", dontSendNotification);
-    titleLabel.setFont (Font (22.0f, Font::bold));
+    titleLabel.setFont (juce::Font (juce::FontOptions (22.0f).withStyle ("Bold")));
     titleLabel.setColour (Label::textColourId, Colour (0xffe3c9a1));
     addAndMakeVisible (titleLabel);
 
@@ -71,7 +71,7 @@ void HarmonyVoicesEditor::addKnob (Component& parent, const String& id, const St
     k->slider.setTextBoxStyle (Slider::TextBoxBelow, false, 60, 14);
     k->label.setText (label, dontSendNotification);
     k->label.setJustificationType (Justification::centred);
-    k->label.setFont (Font (11.0f));
+    k->label.setFont (juce::Font (juce::FontOptions (11.0f)));
     k->label.setColour (Label::textColourId, Colour (0xffb9cadb));
     parent.addAndMakeVisible (k->slider);
     parent.addAndMakeVisible (k->label);
@@ -104,16 +104,32 @@ void HarmonyVoicesEditor::resized()
     auto row1 = area.removeFromTop (150);
     auto row2 = area.removeFromTop (150);
     auto row3 = area.removeFromTop (150);
-    auto row4 = area;
 
+    auto rowA = row1;
+    auto pR = rowA.removeFromLeft (rowA.getWidth() * 55 / 100);
+    auto cR = rowA;
+    
+    auto rowB = row2;
+    auto eR = rowB.removeFromLeft (rowB.getWidth() * 55 / 100);
+    auto vR = rowB;
+    
+    auto rowC = row3;
+    auto mR = rowC;
+
+    // CORRECTION ICI : Utilisation de coordonnées relatives (0,0)
     auto place = [&](GroupComponent& grp, std::initializer_list<int> idxs, Rectangle<int> r)
     {
         grp.setBounds (r);
-        auto inner = r.reduced (10);
+        
+        // On crée un rectangle interne basé sur (0,0) pour le groupe
+        juce::Rectangle<int> inner (0, 0, r.getWidth(), r.getHeight());
+        inner.reduce (10, 10);
         inner.removeFromTop (18);
+        
         const int cellW = inner.getWidth() / (int) idxs.size();
         const int cellH = inner.getHeight() - 20;
         int cx = inner.getX();
+        
         for (auto i : idxs)
         {
             if (i < 0 || i >= (int) knobs.size()) continue;
@@ -125,21 +141,13 @@ void HarmonyVoicesEditor::resized()
         }
     };
 
-    auto rowA = row1;
-    auto pR = rowA.removeFromLeft (rowA.getWidth() * 55 / 100);
-    auto cR = rowA;
-    auto rowB = row2;
-    auto eR = rowB.removeFromLeft (rowB.getWidth() * 55 / 100);
-    auto vR = rowB;
-    auto rowC = row3;
-    auto mR = rowC;
-
     place (grpPitch,  {0, 1, 2},     pR.reduced (4));
     place (grpComp,   {3, 4},        cR.reduced (4));
     place (grpEQ,     {5, 6, 7},     eR.reduced (4));
     place (grpReverb, {8, 9},        vR.reduced (4));
     place (grpMaster, {10, 11, 12},  mR.reduced (4));
 
+    // Les boutons ON restent en coordonnées absolues car ils appartiennent au composant principal (Editor)
     pitchOn.setBounds (grpPitch .getRight() - 50, grpPitch .getY() + 4, 40, 18);
     compOn .setBounds (grpComp  .getRight() - 50, grpComp  .getY() + 4, 40, 18);
     eqOn   .setBounds (grpEQ    .getRight() - 50, grpEQ    .getY() + 4, 40, 18);
