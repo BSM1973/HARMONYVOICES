@@ -47,7 +47,9 @@ void HarmonyVoicesProcessor::prepareToPlay (double sr, int block)
 {
     detector.prepare (sr);
     shifter.prepare (sr);
-    reverb.prepare ({ sr });
+    
+    // CORRECTION 1 : initialisation complète de la réverbération
+    reverb.prepare ({ sr, (uint32) block, 2 });
 
     dryBuf.setSize (2, block, false, false, true);
     monoBuf.setSize (1, block, false, false, true);
@@ -142,9 +144,10 @@ void HarmonyVoicesProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffe
         const float highG = Decibels::decibelsToGain (apvts.getRawParameterValue ("eq_high")->load());
         for (int c = 0; c < 2; ++c)
         {
-            *eqLow[c].coefficients  = *IIR::Coefficients<float>::makeLowShelf (sr, 200.0f, 0.707f, lowG);
-            *eqMid[c].coefficients  = *IIR::Coefficients<float>::makePeakFilter (sr, 1500.0f, 1.0f, midG);
-            *eqHigh[c].coefficients = *IIR::Coefficients<float>::makeHighShelf (sr, 6000.0f, 0.707f, highG);
+            // CORRECTION 2 : ajout de "juce::dsp::" devant IIR
+            *eqLow[c].coefficients  = *juce::dsp::IIR::Coefficients<float>::makeLowShelf (sr, 200.0f, 0.707f, lowG);
+            *eqMid[c].coefficients  = *juce::dsp::IIR::Coefficients<float>::makePeakFilter (sr, 1500.0f, 1.0f, midG);
+            *eqHigh[c].coefficients = *juce::dsp::IIR::Coefficients<float>::makeHighShelf (sr, 6000.0f, 0.707f, highG);
         }
         for (int c = 0; c < 2; ++c)
         {
@@ -170,7 +173,11 @@ void HarmonyVoicesProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffe
         rp.dryLevel = 1.0f - rp.wetLevel;
         rp.width = 1.0f;
         reverb.setParameters (rp);
-        reverb.processStereo (buffer.getWritePointer (0), buffer.getWritePointer (1), n);
+        
+        // CORRECTION 3 : nouvelle méthode de traitement de la réverbération
+        juce::dsp::AudioBlock<float> block (buffer);
+        juce::dsp::ProcessContextReplacing<float> context (block);
+        reverb.process (context);
     }
 
     // --- Global wet/dry + output ---
