@@ -7,22 +7,15 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest # <--- ICI : On utilise un serveur Mac
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: 'recursive'
 
-    - name: Install Dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libasound2-dev libjack-jackd2-dev \
-        ladspa-sdk libcurl4-openssl-dev libfreetype6-dev libx11-dev \
-        libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev \
-        libxrandr-dev libxrender-dev libwebkit2gtk-4.1-dev libglu1-mesa-dev
-
     - name: Configure CMake
-      run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+      # On compile pour Intel (x86_64) ET Apple Silicon (arm64)
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
 
     - name: Build Plugin
       run: cmake --build build --config Release
@@ -30,5 +23,5 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: HarmonyVoices-VST3
+        name: HarmonyVoices-MAC-VST3
         path: build/HarmonyVoices_artefacts/Release/VST3/HarmonyVoices.vst3
