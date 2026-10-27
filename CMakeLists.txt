@@ -4,7 +4,14 @@ project(HarmonyVoices VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_subdirectory(JUCE)
+# Télécharge automatiquement JUCE pour la compilation
+include(FetchContent)
+FetchContent_Declare(
+  JUCE
+  GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+  GIT_TAG 7.0.9
+)
+FetchContent_MakeAvailable(JUCE)
 
 juce_add_plugin(HarmonyVoices
     COMPANY_NAME "LIBERTY"
